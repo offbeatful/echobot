@@ -157,9 +157,7 @@ resource VMSS 'Microsoft.Compute/virtualMachineScaleSets@2021-07-01' = {
         enableAutomaticOSUpgrade: false
       }
     }
-    virtualMachineProfile: {
-      priority: 'Spot'
-      evictionPolicy: 'Deallocate'
+    virtualMachineProfile: {      
       licenseType: contains(OSType[AppServer.OSType], 'licenseType') ? OSType[AppServer.OSType].licenseType : null
       osProfile: {
         computerNamePrefix: VM.vmHostName
