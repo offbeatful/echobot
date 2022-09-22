@@ -165,8 +165,7 @@ namespace EchoBot.Services.Media
                         if (string.IsNullOrEmpty(e.Result.Text))
                             return;
 
-                        _logger.LogInformation($"RECOGNIZED: Text={e.Result.Text}");
-                        var buzzWordsCount = 0;
+                        _logger.LogInformation($"RECOGNIZED: Text={e.Result.Text}");                        
                         var textResult = e.Result.Text.ToLower();
                         foreach(var word in buzzWords)
                         {
@@ -176,7 +175,7 @@ namespace EchoBot.Services.Media
                         }
 
                         if (!string.IsNullOrEmpty(e.Result.Text)) {
-                            if (buzzWordsCounter.Count >= buzzWordsCount)
+                            if (buzzWordsCounter.Count >= buzzWordsThreshold)
                             {
                                 await TextToSpeech(bsPhrase);
                                 buzzWordsCounter.Clear();
@@ -210,7 +209,7 @@ namespace EchoBot.Services.Media
                 _recognizer.SessionStarted += async (s, e) =>
                 {
                     _logger.LogInformation("\nSession started event.");
-                    await TextToSpeech("Hello");
+                    await TextToSpeech("Hi, I am buzz bot. I will make sure the conversation is productive.");
                 };
 
                 _recognizer.SessionStopped += (s, e) =>
