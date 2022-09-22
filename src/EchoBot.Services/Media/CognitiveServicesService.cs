@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging;
+using System.Collections.Generic;
 
 namespace EchoBot.Services.Media
 {
@@ -34,6 +35,17 @@ namespace EchoBot.Services.Media
         private readonly SpeechConfig _speechConfig;
         private SpeechRecognizer _recognizer;
         private readonly SpeechSynthesizer _synthesizer;
+
+        private static readonly string [] buzzWords = new []{
+            "disruptive", "ecosystem", "viral",  "gamification", "cloud", "big data", "crypto", "game changer", "artificial intelligence", "high performance"
+        };
+
+        private IList<string> buzzWordsCounter = new List<string>();
+        private readonly int buzzWordsThreshold = 3;
+
+        private const string bsPhrase = "I am sorry, but this is bullshit...";
+        private const string andSo = "And so?";
+
         /// <summary>
         /// Initializes a new instance of the <see cref="CognitiveServicesService" /> class.
         public CognitiveServicesService(AppSettings settings, ILogger logger)
@@ -154,9 +166,26 @@ namespace EchoBot.Services.Media
                             return;
 
                         _logger.LogInformation($"RECOGNIZED: Text={e.Result.Text}");
-                        // We recognized the speech
-                        // Now do Speech to Text
-                        await TextToSpeech(e.Result.Text);
+                        var buzzWordsCount = 0;
+                        var textResult = e.Result.Text.ToLower();
+                        foreach(var word in buzzWords)
+                        {
+                            if (textResult.Contains(word) && !buzzWordsCounter.Contains(word)) {
+                                buzzWordsCounter.Add(word);
+                            }
+                        }
+
+                        if (!string.IsNullOrEmpty(e.Result.Text)) {
+                            if (buzzWordsCounter.Count >= buzzWordsCount)
+                            {
+                                await TextToSpeech(bsPhrase);
+                                buzzWordsCounter.Clear();
+                            }
+                            else {
+                                await TextToSpeech(andSo);
+                            }
+
+                        }
                     }
                     else if (e.Result.Reason == ResultReason.NoMatch)
                     {
@@ -199,7 +228,7 @@ namespace EchoBot.Services.Media
                 Task.WaitAny(new[] { stopRecognition.Task });
 
                 // Stops recognition.
-                await _recognizer.StopContinuousRecognitionAsync().ConfigureAwait(false);
+                await _recognizer.StopContinuousRecognitionAsync().ConfigureAwait(false);                
             }
             catch (ObjectDisposedException ex)
             {
